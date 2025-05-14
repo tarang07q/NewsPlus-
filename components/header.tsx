@@ -3,7 +3,21 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
-import { Newspaper, Bookmark, LogOut, Menu, X, User } from "lucide-react"
+import {
+  Newspaper,
+  Bookmark,
+  LogOut,
+  Menu,
+  X,
+  User,
+  BarChart,
+  History,
+  Bell,
+  Settings,
+  LayoutDashboard,
+  Sparkles
+} from "lucide-react"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -54,11 +68,27 @@ export function Header() {
               pathname === "/" ? "text-primary" : "text-muted-foreground",
             )}
           >
-            Home
+            <Newspaper className="h-4 w-4 mr-1 inline-block" />
+            News
           </Link>
+
+          {session && (
+            <Link
+              href="/dashboard"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                pathname === "/dashboard" ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              <LayoutDashboard className="h-4 w-4 mr-1 inline-block" />
+              Dashboard
+            </Link>
+          )}
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="text-sm font-medium">
+                <Sparkles className="h-4 w-4 mr-1" />
                 Categories
               </Button>
             </DropdownMenuTrigger>
@@ -70,21 +100,38 @@ export function Header() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
           {session && (
-            <Link
-              href="/bookmarks"
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                pathname === "/bookmarks" ? "text-primary" : "text-muted-foreground",
-              )}
-            >
-              Bookmarks
-            </Link>
+            <>
+              <Link
+                href="/bookmarks"
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  pathname === "/bookmarks" ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                <Bookmark className="h-4 w-4 mr-1 inline-block" />
+                Bookmarks
+              </Link>
+
+              <Link
+                href="/news-alerts"
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  pathname === "/news-alerts" ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                <Bell className="h-4 w-4 mr-1 inline-block" />
+                Alerts
+              </Link>
+            </>
           )}
         </nav>
 
         {/* User Menu */}
         <div className="flex items-center gap-4">
+          <ThemeToggle />
+
           {session ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -93,18 +140,63 @@ export function Header() {
                   <span className="sr-only">User menu</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem disabled>
-                  <span>{session.user?.email}</span>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem disabled className="font-medium">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>{session.user?.name || session.user?.email}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                </DropdownMenuItem>
+
                 <DropdownMenuItem asChild>
                   <Link href="/bookmarks">
                     <Bookmark className="mr-2 h-4 w-4" />
                     <span>Bookmarks</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
+
+                <DropdownMenuItem asChild>
+                  <Link href="/reading-history">
+                    <History className="mr-2 h-4 w-4" />
+                    <span>Reading History</span>
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                  <Link href="/news-stats">
+                    <BarChart className="mr-2 h-4 w-4" />
+                    <span>News Stats</span>
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem asChild>
+                  <Link href="/news-alerts">
+                    <Bell className="mr-2 h-4 w-4" />
+                    <span>News Alerts</span>
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                  <Link href="/news-preferences">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Preferences</span>
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  onClick={() => signOut({ callbackUrl: "/login" })}
+                  className="text-destructive focus:text-destructive"
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
@@ -153,6 +245,14 @@ export function Header() {
             {session ? (
               <>
                 <Link
+                  href="/dashboard"
+                  className="flex items-center py-2 text-sm font-medium"
+                  onClick={toggleMobileMenu}
+                >
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Dashboard
+                </Link>
+                <Link
                   href="/bookmarks"
                   className="flex items-center py-2 text-sm font-medium"
                   onClick={toggleMobileMenu}
@@ -160,9 +260,45 @@ export function Header() {
                   <Bookmark className="mr-2 h-4 w-4" />
                   Bookmarks
                 </Link>
+                <Link
+                  href="/reading-history"
+                  className="flex items-center py-2 text-sm font-medium"
+                  onClick={toggleMobileMenu}
+                >
+                  <History className="mr-2 h-4 w-4" />
+                  Reading History
+                </Link>
+                <Link
+                  href="/news-stats"
+                  className="flex items-center py-2 text-sm font-medium"
+                  onClick={toggleMobileMenu}
+                >
+                  <BarChart className="mr-2 h-4 w-4" />
+                  News Stats
+                </Link>
+                <Link
+                  href="/news-alerts"
+                  className="flex items-center py-2 text-sm font-medium"
+                  onClick={toggleMobileMenu}
+                >
+                  <Bell className="mr-2 h-4 w-4" />
+                  News Alerts
+                </Link>
+                <Link
+                  href="/news-preferences"
+                  className="flex items-center py-2 text-sm font-medium"
+                  onClick={toggleMobileMenu}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Preferences
+                </Link>
+                <div className="flex items-center py-2 text-sm font-medium">
+                  <span className="mr-2">Theme:</span>
+                  <ThemeToggle />
+                </div>
                 <Button
                   variant="ghost"
-                  className="flex items-center w-full justify-start px-0"
+                  className="flex items-center w-full justify-start px-0 text-destructive"
                   onClick={() => {
                     signOut({ callbackUrl: "/login" })
                     toggleMobileMenu()

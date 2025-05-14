@@ -12,36 +12,62 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            return null
+          }
+
+          // For development, allow login with test@test.com / password
+          if (credentials.email === "test@test.com" && credentials.password === "password") {
+            return {
+              id: "mock-user-id",
+              name: "Test User",
+              email: credentials.email,
+              image: null,
+            }
+          }
+
+          // Try to connect to the database
+          const { db } = await connectToDatabase()
+
+          // If we can't connect to the database, return null
+          if (!db) {
+            console.warn("Database connection failed")
+            return null
+          }
+
+          const user = await db.collection("users").findOne({ email: credentials.email })
+
+          if (!user) {
+            return null
+          }
+
+          const isPasswordValid = await compare(credentials.password, user.password)
+
+          if (!isPasswordValid) {
+            return null
+          }
+
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.username || user.name,
+            image: user.image || null,
+          }
+        } catch (error) {
+          console.error("Auth error:", error)
           return null
-        }
-
-        const { db } = await connectToDatabase()
-        const user = await db.collection("users").findOne({ email: credentials.email })
-
-        if (!user) {
-          return null
-        }
-
-        const isPasswordValid = await compare(credentials.password, user.password)
-
-        if (!isPasswordValid) {
-          return null
-        }
-
-        return {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.username,
         }
       },
     }),
   ],
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: "/login",
+    error: "/login",
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -61,5 +87,7 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
 }
 

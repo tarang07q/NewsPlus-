@@ -22,14 +22,25 @@ export function SearchBar({ initialQuery = "" }: SearchBarProps) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Create a new URLSearchParams object from the current search params
+    const params = new URLSearchParams(searchParams.toString())
+
     // Preserve the current category when searching
     const category = searchParams.get("category") || "general"
+    params.set("category", category)
 
+    // Always reset to page 1 when performing a new search
+    params.delete("page")
+
+    // Set or remove the search query
     if (query.trim()) {
-      router.push(`/?category=${category}&q=${encodeURIComponent(query.trim())}`)
+      params.set("q", query.trim())
     } else {
-      router.push(`/?category=${category}`)
+      params.delete("q")
     }
+
+    // Navigate to the new URL with all parameters properly set
+    router.push(`/?${params.toString()}`)
   }
 
   return (
